@@ -1,0 +1,35 @@
+{
+  "name": "audio_convert",
+  "version": "1.0.0",
+  "description": "Batch convert audio",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build && node ./build/index.js",
+    "run": "node ./build/index.js",
+    "clean": "rm -rf ./build/*",
+    "build": "./node_modules/.bin/tsc",
+    "test": "env NODE_ENV=test mocha --timeout=3000 --exit --require ts-node/register ./test/*.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gordody/audio_convert"
+  },
+  "keywords": [
+    "audio",
+    "batch",
+    "convert"
+  ],
+  "author": "Gyuri Ordody",
+  "license": "ISC",
+  "dependencies": {
+    "@types/command-line-args": "^5.0.0",
+    "command-line-args": "^5.1.1",
+    "trash": "^6.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^13.13.6",
+    "ts-loader": "^7.0.2",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.8.3"
+  }
+}
