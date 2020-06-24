@@ -7,7 +7,24 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch Program - default arguments",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "args": [
+        "--verbose",
+        "--src", "/Users/gyuri/Desktop/audio_test_files/test",
+      ],
+      "program": "${workspaceFolder}/index.ts",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/build/**/*.js"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program - multiple arguments",
       "skipFiles": [
         "<node_internals>/**"
       ],

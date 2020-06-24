@@ -8,6 +8,9 @@
     "run": "node ./build/index.js",
     "clean": "rm -rf ./build/*",
     "build": "./node_modules/.bin/tsc",
+    "copy-assets": "cp ./node_modules/trash/lib/macos-trash ./node_modules/trash/lib/windows-trash.exe .",
+    "build-exe-mac": "npm run build && npm run copy-assets && npx pkg --targets node12-macos-x64 --output audio_convert build/index.js",
+    "build-exe-win": "npm run build && npm run copy-assets && npx pkg --targets node12-macos-win --output audio_convert.exe build/index.js",
     "test": "env NODE_ENV=test mocha --timeout=3000 --exit --require ts-node/register ./test/*.test.ts"
   },
   "repository": {
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^13.13.6",
+    "pkg": "^4.4.8",
     "ts-loader": "^7.0.2",
     "ts-node": "^8.10.1",
     "typescript": "^3.8.3"

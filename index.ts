@@ -8,6 +8,38 @@ import trash from 'trash';
 import child_process from 'child_process';
 const execFile = util.promisify(child_process.execFile);
 
+// any more? 
+const AUDIO_FORMATS = [
+  '3gp',
+  'a52',
+  'asf',
+  'aac',
+  'aif',
+  'aiff',
+  'au',
+  'dts',
+  'dv',
+  'flac',
+  'flv',
+  'ogm',
+  'ogg',
+  'm4a',
+  'mp3',
+  'mid',
+  'mka',
+  'mkv',
+  'mlp',
+  'mod',
+  'ts',
+  'tac',
+  'tta',
+  'ty',
+  'vid',
+  'wmv',
+  'xa',
+  'wav'
+];
+
 const VLC_CMD = {
   win: `${process.env.PROGRAMFILES}\\VideoLAN\\VLC\\vlc.exe`,
   osx: '/Applications/VLC.app/Contents/MacOS/VLC'
@@ -41,11 +73,11 @@ class AudioFileConverter implements FileProcessor {
     this.cmd = getVlcCmdForOs();
   }
 
-  //  -I rc -vvv --sout "#transcode{acodec=mp3,ab=512,channels=2,samplerate=44100}:std{access=file,mux=raw,dst=/Users/gyuri/Desktop/audio_test_files/test/Sample_BeeMoved_96kHz24bit.mp3}" /Users/gyuri/Desktop/audio_test_files/test/Sample_BeeMoved_96kHz24bit.flac vlc://quit
+  //  -I dummy -vvv --sout "#transcode{acodec=mp3,ab=512,channels=2,samplerate=44100}:std{access=file,mux=raw,dst=/Users/gyuri/Desktop/audio_test_files/test/Sample_BeeMoved_96kHz24bit.mp3}" /Users/gyuri/Desktop/audio_test_files/test/Sample_BeeMoved_96kHz24bit.flac vlc://quit
   async _processFile(inputFilePath: string, outputFileName: string) {
     const sOutStr = `#transcode{${this.outputOptions}}:std{access=file,mux=raw,dst="${outputFileName}"}`;
     const cmdArgs: Array<string> = [
-      '-I', 'rc', 
+      '-I', 'dummy', 
       inputFilePath,
       '--sout',
       sOutStr,
@@ -98,14 +130,19 @@ class FolderProcessor {
 
   async processFile(filePath: string) {
     console.log(`Processing file ${filePath}`);
+    let result;
     try {
-      const result = await this.fileProcessor.process(filePath);
-      if (this.deleteOriginals) {
-        const isFileExists = await exists(result.resultPath); // if the new file exists, we can delete the old one
-        if (isFileExists) trash([filePath]); // no need to await
-      }
+      result = await this.fileProcessor.process(filePath);
     } catch(err) {
       console.error('Error processing file: ', err);
+    }
+    try {
+      if (result && this.deleteOriginals) {
+        const isFileExists = await exists(result.resultPath); // if the new file exists, we can delete the old one
+        if (isFileExists) await trash([filePath]);
+      }
+    } catch(err) {
+      console.error('Error deleting file: ', err);
     }
   }
 
@@ -118,8 +155,8 @@ class FolderProcessor {
         const entryPath = path.join(folderPath, entry.name);
         if (entry.isDirectory()) await this.processFolder(entryPath);
         if (entry.isFile()) {
-          const ext = path.extname(entry.name).slice(1);
-          if (this.fileTypes.includes(ext)) {
+          const ext = path.extname(entry.name).slice(1).toLowerCase();
+          if (ext !== this.outputType && this.fileTypes.includes(ext)) {
             const fileRes = this.processFile(entryPath).catch(err => {
               console.warn(`Failed to process file ${entryPath}, error=${err}`);
             });
@@ -149,13 +186,14 @@ function main() {
   const cmdOptions = commandLineArgs(optionDefinitions);
 
   const rootFolder = (cmdOptions.src && cmdOptions.src.length) ? cmdOptions.src : [__dirname];
-  const fileTypes = (cmdOptions.inputType && cmdOptions.inputType.length) ? cmdOptions.inputType : ['flac'];
+  const fileTypes = (cmdOptions.inputType && cmdOptions.inputType.length) ? cmdOptions.inputType : AUDIO_FORMATS;
+  const outputType = cmdOptions.outputType || 'mp3';
 
   const options = {
     verboseLog: cmdOptions.verbose,
     rootFolder,
     fileTypes,
-    outputType: cmdOptions.outputType || 'mp3',
+    outputType,
     deleteOriginals: !cmdOptions.keepOriginals
   };
   const folderProcessor = new FolderProcessor(options);
